@@ -28,7 +28,7 @@
 
 <script>
 export default {
-  data(){
+  data (){
     return{
       /*登陆表单数据绑定对象*/
       loginForm:{
