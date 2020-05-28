@@ -1,9 +1,9 @@
 <template>
   <div>
     <!--      面包屑-->
-    <el-breadcrumb separator="/">
+    <el-breadcrumb separator=">">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item><a href="/">用户管理</a></el-breadcrumb-item>
+      <el-breadcrumb-item>用户管理</el-breadcrumb-item>
       <el-breadcrumb-item>用户列表</el-breadcrumb-item>
     </el-breadcrumb>
 
@@ -49,7 +49,7 @@
 
             <!--              分配角色按钮-->
             <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
-              <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+              <el-button type="warning" icon="el-icon-setting" size="mini" @click="setRole(scope.row)"></el-button>
             </el-tooltip>
 
           </template>
@@ -117,6 +117,36 @@
   </span>
     </el-dialog>
 
+<!--    分配角色的对话框-->
+    <el-dialog
+      title="分配角色"
+      :visible.sync="setRoleDialogVisible"
+      width="50%"
+    @close="setRoleDialogClosed">
+      <div>
+        <p>
+          当前用户信息 {{userInfo.username}}
+        </p>
+        <p>
+          当前用户角色 {{userInfo.role_name}}
+        </p>
+        <p>
+          分配新角色
+          <el-select v-model="selectRoleId" placeholder="请选择">
+            <el-option
+              v-for="item in rolesList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id">
+            </el-option>
+          </el-select>
+        </p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+    <el-button @click="setRoleDialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="saveRoleInfo">确 定</el-button>
+  </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -125,25 +155,25 @@
     name: "Users",
     data() {
       //验证邮箱规则
-      var checkEmail = (rule,value,callback) => {
+      const checkEmail = (rule, value, callback) => {
         //邮箱验证规则
         const regEmail = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-]+)+$/
-        if(regEmail.test(value)){
+        if (regEmail.test(value)) {
           //合法邮箱
           return callback()
         }
         callback(new Error('请输入合法的邮箱'))
-      }
+      };
       //验证手机规则
-      var checkMobile = (rule,value,callback) =>{
+      const checkMobile = (rule, value, callback) => {
         //手机号验证规则
         const regMobile = /^[1](([3][0-9])|([4][5-9])|([5][0-3,5-9])|([6][5,6])|([7][0-8])|([8][0-9])|([9][1,8,9]))[0-9]{8}$/
-        if(regMobile.test(value)){
+        if (regMobile.test(value)) {
           //合法手机号
           return callback()
         }
         callback(new Error('请输入合法手机号'))
-      }
+      };
 
 
       return {
@@ -182,9 +212,12 @@
           },
         //控制修改用户对话框的显示与隐藏
         editDialogVisible:false,
+
         //查询到的用户对象
         editForm:{},
 
+        //控制 分配角色对话框的显示与隐藏
+        setRoleDialogVisible:false,
         //修改表单的验证规则对象
         editFormRules:{
           email:[
@@ -195,7 +228,15 @@
             {required: true, message: '请输入手机', trigger: blur()
             }, {validator: checkMobile,trigger: blur() }
           ]
-        }
+        },
+        //需要分配的用户信息
+        userInfo:{
+
+        },
+        //角色列表
+        rolesList:[],
+        //已选中的id值
+        selectRoleId:''
         }
 
     },
@@ -298,6 +339,32 @@
         }
         this.$message.success('删除成功')
         await this.getUserList()
+      },
+      //展示分配角色的对话框
+      async setRole(userInfo){
+        this.userInfo = userInfo
+        //获取角色列表
+        const {data : res} = await this.$http.get('roles')
+        if(res.meta.status!==200)return this.$message.error('获取角色失败！')
+        this.rolesList = res.data
+        this.setRoleDialogVisible=true
+      },
+
+      //点击按钮分配角色
+      async saveRoleInfo(){
+        if(!this.selectRoleId) return this.$message.error('请选择角色！')
+        const {data :res} = await this.$http.put(`users/${this.userInfo.id}/role`, {rid: this.selectRoleId})
+        console.log(res)
+        if(res.meta.status!==200)return this.$message.error('分配失败！')
+        this.$message.success('更新成功！')
+        await this.getUserList()
+        this.setRoleDialogVisible = false
+      },
+
+      //分配角色对话框关闭监听
+      setRoleDialogClosed(){
+        this.userInfo={},
+          this.selectRoleId = ''
       }
     }
   }
