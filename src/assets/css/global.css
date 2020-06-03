@@ -23,3 +23,7 @@ html,body,#app{
     display: flex;
     align-items: center;
 }
+.el-cascader-menu {
+    height: 300px;
+    width: 100%;
+}
