@@ -6,6 +6,13 @@ import './plugins/element.js'
 import './assets/css/global.css'
 //字体图标
 import './assets/fonts/iconfont.css'
+
+//导入富文本编辑器
+import VueQuillEditor from "vue-quill-editor/src";
+//导入富文本的样式
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
 //axios配置
 import axios from 'axios'
 
@@ -21,6 +28,19 @@ Vue.config.productionTip = false
 
 Vue.component('tree-table',TreeTable)
 
+//将富文本注册为全局可用的组件
+Vue.use(VueQuillEditor)
+
+Vue.filter('dateFormat',function (originVal) {
+  const dt = new Date(originVal)
+  const y = dt.getFullYear()
+  const m = (dt.getMonth()+1+'').padStart(2,'0')
+  const d = (dt.getDay()+'').padStart(2,'0')
+  const hh = (dt.getHours() +'').padStart(2,'0')
+  const mm = (dt.getMinutes()+'').padStart(2,'0')
+  const ss = (dt.getSeconds() +'').padStart(2,'0')
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`
+})
 
 new Vue({
   router,
